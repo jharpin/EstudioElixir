@@ -9,9 +9,17 @@ defmodule Clientes do
 
     normalizados =
       Enum.map(datos, fn [id, nombre, correo] ->
-        nombre_norm = String.split(nombre) |> Enum.map(&String.capitalize/1) |> Enum.join(" ")
-        correo_norm = String.downcase(correo)
-        [id, nombre_norm, correo_norm]
+        nombre_titulo =
+          nombre
+          |> String.trim()
+          |> String.downcase()
+          |> String.split(" ")
+          |> Enum.map(&String.capitalize/1)
+          |> Enum.join(" ")
+
+        correo_min = String.downcase(String.trim(correo))
+
+        [id, nombre_titulo, correo_min]
       end)
 
     escribir_csv(output, [encabezado | normalizados])
