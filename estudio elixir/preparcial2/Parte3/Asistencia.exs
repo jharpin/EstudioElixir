@@ -5,22 +5,29 @@ defmodule Asistencia do
 
   def consolidar(input \\ "asistencia.csv", output \\ "resumen_asistencia.csv") do
     filas = leer_csv(input)
-    [_encabezado | datos] = filas
+    [encabezado | datos] = filas
+
+    # datos = [["2025-10-01", "Ana", "P"], ["2025-10-02", "Ana", "A"], ...]
 
     resumen =
-      Enum.reduce(datos, %{}, fn [_fecha, estudiante, estado], acc ->
-        Map.update(acc, estudiante, %{P: 0, T: 0, A: 0}, fn m ->
-          Map.update!(m, String.to_atom(estado), &(&1 + 1))
-        end)
+      datos
+      |> Enum.group_by(fn [_fecha, estudiante, _estado] -> estudiante end)
+      |> Enum.map(fn {estudiante, registros} ->
+        total_p = contar_estado(registros, "P")
+        total_t = contar_estado(registros, "T")
+        total_a = contar_estado(registros, "A")
+        [estudiante, Integer.to_string(total_p), Integer.to_string(total_t), Integer.to_string(total_a)]
       end)
 
-    filas_salida =
-      [["estudiante", "total_P", "total_T", "total_A"]] ++
-        Enum.map(resumen, fn {est, %{P: p, T: t, A: a}} ->
-          [est, "#{p}", "#{t}", "#{a}"]
-        end)
+    encabezado_salida = ["estudiante", "total_P", "total_T", "total_A"]
+    escribir_csv(output, [encabezado_salida | resumen])
 
-    escribir_csv(output, filas_salida)
     IO.puts("Archivo generado: #{output}")
+  end
+
+  defp contar_estado(registros, tipo) do
+    Enum.count(registros, fn [_fecha, _estudiante, estado] ->
+      String.trim(estado) == tipo
+    end)
   end
 end
