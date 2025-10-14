@@ -4,6 +4,7 @@ defmodule Main do
     lista2 = [3,5,7,2,8,1,4,6,59,3,5,7,2,8,1,4,6,59]
     lista3=[ 5, 2, 8]
     Util.mostrar_mensaje("Múltiplos de 3 o 5 en la lista: #{inspect(Util.mostrar_multiplos(lista), charlists: :as_lists)}")
+
     Util.mostrar_mensaje("Cantidad de múltiplos de 3 o 5: #{Util.contar_multiplos(lista)}")
 
     Util.mostrar_mensaje("los pares de la lista son #{inspect(Util.min_max(lista2))}")
