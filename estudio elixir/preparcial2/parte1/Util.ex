@@ -8,6 +8,10 @@ defmodule Util do
       contar_multiplos(tail)
     end
   end
+
+#___funcion para sumar los elementos de una lista)
+def sumar_lista([]), do: 0
+def sumar_lista([head | tail]), do: head + sumar_lista(tail)
 # --- Función para mostrar múltiplos ---
 def mostrar_multiplos([]), do: []
 def mostrar_multiplos([head | tail]) do
@@ -29,7 +33,7 @@ end
 
 # --- Función para eliminar duplicados ---
 def eliminar_duplicados(lista), do: eliminar_aux(lista, [])
-defp eliminar_aux([], acum), do: Enum.reverse(acum)
+defp eliminar_aux([], acum), do: reverse(acum)
 defp eliminar_aux([head | tail], acum) do
 if esta_en?(head, acum) do
 eliminar_aux(tail, acum)
@@ -37,15 +41,19 @@ else
 eliminar_aux(tail, [head | acum])
 end
 end
+
 defp esta_en?(_elem, []), do: false
 defp esta_en?(elem, [h | t]) do
 elem == h or esta_en?(elem, t)
 end
+defp reverse(list), do: reverse_aux(list, [])
+defp reverse_aux([], acc), do: acc
+defp reverse_aux([h | t], acc), do: reverse_aux(t, [h | acc])
 
 # --- Función para encontrar combinación que sume un objetivo ---
 
 def encontrar(lista, objetivo), do: buscar(lista, objetivo, [])
-defp buscar(_lista, 0, acum), do: Enum.reverse(acum)
+defp buscar(_lista, 0, acum), do: reverse(acum)
 defp buscar([], _obj, _acum), do: {:error, :sin_solucion}
 defp buscar([h | t], obj, acum) do
 case buscar(t, obj - h, [h | acum]) do
