@@ -1,0 +1,4 @@
+id,codigo_recurso,nombre_recurso,cupos_disponibles,usuario,cantidad
+1,R1,Proyector,5,ana,2
+2,R2,Computador,3,luis,3
+3,R3,Laboratorio,2,maria,1
