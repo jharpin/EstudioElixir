@@ -5,8 +5,8 @@ defmodule ChatCliente do
 
   # Para la PC del SERVIDOR (misma IP que el servidor):
   @nombre_servicio_local :cliente_chat
-  @servicio_local {@nombre_servicio_local, :"nodocliente1@10.146.65.250"}
-  @nodo_remoto :"nodoservidor@10.146.65.250"
+  @servicio_local {@nombre_servicio_local, :"nodocliente1@192.168.157.250"}
+  @nodo_remoto :"nodoservidor@192.168.157.250"
   @servicio_remoto {:chat_servidor, @nodo_remoto}
 
   # ═══════════════════════════════════════════════════════════
