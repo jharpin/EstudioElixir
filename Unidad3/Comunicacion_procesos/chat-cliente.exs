@@ -1,20 +1,13 @@
 defmodule ChatCliente do
   # ═══════════════════════════════════════════════════════════
-  # 🔧 CONFIGURACIÓN - Modifica solo estas líneas
+  #  CONFIGURACIÓN - Modifica solo estas líneas
   # ═══════════════════════════════════════════════════════════
 
-  # Para LOCALHOST (misma computadora con --sname):
+  # Para la PC del SERVIDOR (misma IP que el servidor):
   @nombre_servicio_local :cliente_chat
-  @servicio_local {@nombre_servicio_local, node()}  # Se construye automático
-  @nodo_remoto :servidor  # Solo nombre, se construye el @hostname automático
+  @servicio_local {@nombre_servicio_local, :"nodocliente1@10.146.65.250"}
+  @nodo_remoto :"nodoservidor@10.146.65.250"
   @servicio_remoto {:chat_servidor, @nodo_remoto}
-
-  # Para RED (diferentes computadoras con --name):
-  # Descomentar y modificar estas líneas:
-  # @nombre_servicio_local :cliente_chat
-  # @servicio_local {@nombre_servicio_local, :"nodocliente1@192.168.1.91"}
-  # @nodo_remoto :"nodoservidor@192.168.1.94"
-  # @servicio_remoto {:chat_servidor, @nodo_remoto}
 
   # ═══════════════════════════════════════════════════════════
   # No modificar debajo de esta línea
@@ -22,49 +15,32 @@ defmodule ChatCliente do
 
   def main() do
     mostrar_banner()
-
-    # Para --sname, construir el nodo completo
-    nodo_servidor_completo = construir_nodo_servidor()
-
-    IO.puts(IO.ANSI.yellow() <> "📡 Conectando a: #{nodo_servidor_completo}" <> IO.ANSI.reset())
+    IO.puts(IO.ANSI.yellow() <> " Conectando a: #{@nodo_remoto}" <> IO.ANSI.reset())
 
     nombre = solicitar_nombre()
 
     registrar_servicio()
-    |> establecer_conexion(nombre, nodo_servidor_completo)
-    |> iniciar_chat(nombre, nodo_servidor_completo)
-  end
-
-  defp construir_nodo_servidor() do
-    # Si @nodo_remoto no tiene @, construirlo automáticamente
-    nodo_str = Atom.to_string(@nodo_remoto)
-
-    if String.contains?(nodo_str, "@") do
-      @nodo_remoto
-    else
-      # Obtener hostname del nodo actual
-      mi_hostname = node() |> Atom.to_string() |> String.split("@") |> List.last()
-      String.to_atom("#{nodo_str}@#{mi_hostname}")
-    end
+    |> establecer_conexion(nombre)
+    |> iniciar_chat(nombre)
   end
 
   defp mostrar_banner() do
     IO.puts("\n" <> IO.ANSI.cyan())
-    IO.puts("╔═══════════════════════════════════════╗")
-    IO.puts("║       💬 CHAT EN TIEMPO REAL 💬      ║")
-    IO.puts("╚═══════════════════════════════════════╝")
+
+    IO.puts("       CHAT EN TIEMPO REAL       ")
+
     IO.puts(IO.ANSI.reset())
   end
 
   defp solicitar_nombre() do
-    IO.gets("\n👤 Ingresa tu nombre: ")
+    IO.gets("\n Ingresa tu nombre: ")
     |> String.trim()
     |> validar_nombre()
   end
 
   defp validar_nombre(""), do: solicitar_nombre()
   defp validar_nombre(nombre) when byte_size(nombre) > 20 do
-    IO.puts(IO.ANSI.red() <> "✗ Nombre muy largo (máximo 20 caracteres)" <> IO.ANSI.reset())
+    IO.puts(IO.ANSI.red() <> " Nombre muy largo (máximo 20 caracteres)" <> IO.ANSI.reset())
     solicitar_nombre()
   end
   defp validar_nombre(nombre), do: nombre
@@ -74,11 +50,10 @@ defmodule ChatCliente do
     :ok
   end
 
-  defp establecer_conexion(:ok, nombre, nodo_servidor) do
-    case Node.connect(nodo_servidor) do
+  defp establecer_conexion(:ok, nombre) do
+    case Node.connect(@nodo_remoto) do
       true ->
-        servicio = {:chat_servidor, nodo_servidor}
-        send(servicio, {:conectar, self(), nombre})
+        send(@servicio_remoto, {:conectar, self(), nombre})
         esperar_confirmacion(nombre)
       false ->
         {:error, "No se pudo conectar al servidor"}
@@ -96,16 +71,16 @@ defmodule ChatCliente do
     end
   end
 
-  defp iniciar_chat(:ok, nombre, nodo_servidor) do
-    IO.puts(IO.ANSI.green() <> "\n✓ Conectado exitosamente como '#{nombre}'" <> IO.ANSI.reset())
+  defp iniciar_chat(:ok, nombre) do
+    IO.puts(IO.ANSI.green() <> "\n Conectado exitosamente como '#{nombre}'" <> IO.ANSI.reset())
     mostrar_ayuda()
 
-    spawn(fn -> bucle_lectura(nombre, nodo_servidor) end)
+    spawn(fn -> bucle_lectura(nombre) end)
     bucle_receptor()
   end
 
-  defp iniciar_chat({:error, razon}, _nombre, _nodo) do
-    IO.puts(IO.ANSI.red() <> "\n✗ Error: #{razon}" <> IO.ANSI.reset())
+  defp iniciar_chat({:error, razon}, _nombre) do
+    IO.puts(IO.ANSI.red() <> "\n Error: #{razon}" <> IO.ANSI.reset())
     IO.puts("Intenta de nuevo.\n")
   end
 
@@ -118,11 +93,11 @@ defmodule ChatCliente do
     IO.puts("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" <> IO.ANSI.reset() <> "\n")
   end
 
-  defp bucle_lectura(nombre, nodo_servidor) do
+  defp bucle_lectura(nombre) do
     entrada = IO.gets("") |> String.trim()
 
-    case procesar_entrada(entrada, nodo_servidor) do
-      :continuar -> bucle_lectura(nombre, nodo_servidor)
+    case procesar_entrada(entrada) do
+      :continuar -> bucle_lectura(nombre)
       :salir ->
         send(self_registered(), :salir)
         :ok
@@ -144,7 +119,7 @@ defmodule ChatCliente do
         bucle_receptor()
 
       :salir ->
-        IO.puts(IO.ANSI.green() <> "✓ Desconectado. ¡Hasta pronto!" <> IO.ANSI.reset() <> "\n")
+        IO.puts(IO.ANSI.green() <> " Desconectado. ¡Hasta pronto!" <> IO.ANSI.reset() <> "\n")
         :ok
 
       _ ->
@@ -156,30 +131,27 @@ defmodule ChatCliente do
     Process.whereis(@nombre_servicio_local)
   end
 
-  defp procesar_entrada("", _nodo), do: :continuar
+  defp procesar_entrada(""), do: :continuar
 
-  defp procesar_entrada("/salir", nodo_servidor) do
-    IO.puts(IO.ANSI.yellow() <> "\n👋 Saliendo del chat..." <> IO.ANSI.reset())
-    servicio = {:chat_servidor, nodo_servidor}
-    send(servicio, {:desconectar, self_registered()})
+  defp procesar_entrada("/salir") do
+    IO.puts(IO.ANSI.yellow() <> "\n Saliendo del chat..." <> IO.ANSI.reset())
+    send(@servicio_remoto, {:desconectar, self_registered()})
     Process.sleep(300)
     :salir
   end
 
-  defp procesar_entrada("/usuarios", nodo_servidor) do
-    servicio = {:chat_servidor, nodo_servidor}
-    send(servicio, {:listar_usuarios, self_registered()})
+  defp procesar_entrada("/usuarios") do
+    send(@servicio_remoto, {:listar_usuarios, self_registered()})
     :continuar
   end
 
-  defp procesar_entrada("/ayuda", _nodo) do
+  defp procesar_entrada("/ayuda") do
     mostrar_ayuda()
     :continuar
   end
 
-  defp procesar_entrada(texto, nodo_servidor) do
-    servicio = {:chat_servidor, nodo_servidor}
-    send(servicio, {:mensaje, self_registered(), texto})
+  defp procesar_entrada(texto) do
+    send(@servicio_remoto, {:mensaje, self_registered(), texto})
     :continuar
   end
 end

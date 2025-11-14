@@ -2,9 +2,8 @@ defmodule ChatServidor do
   @nombre_servicio :chat_servidor
 
   def main() do
-    IO.puts("\n" <> IO.ANSI.green() <> "╔═══════════════════════════════════════╗")
-    IO.puts("║   🚀 SERVIDOR DE CHAT INICIADO 🚀   ║")
-    IO.puts("╚═══════════════════════════════════════╝" <> IO.ANSI.reset())
+
+    IO.puts("    SERVIDOR DE CHAT INICIADO    ")
     IO.puts("Esperando conexiones...\n")
 
     Process.register(self(), @nombre_servicio)
@@ -28,7 +27,7 @@ defmodule ChatServidor do
           send(pid_cliente, {:conectado, nombre_usuario})
 
           # Notificar a todos que hay un nuevo usuario
-          mensaje_entrada = "🟢 #{nombre_usuario} se ha unido al chat"
+          mensaje_entrada = " #{nombre_usuario} se ha unido al chat"
           broadcast(nuevos_clientes, mensaje_entrada, :sistema)
 
           log_servidor("#{nombre_usuario} conectado (#{map_size(nuevos_clientes)} usuarios)")
@@ -53,7 +52,7 @@ defmodule ChatServidor do
         |> Enum.map(fn {nombre, idx} -> "  #{idx}. #{nombre}" end)
         |> Enum.join("\n")
 
-        mensaje = "\n👥 Usuarios conectados (#{map_size(clientes)}):\n#{lista}"
+        mensaje = "\n Usuarios conectados (#{map_size(clientes)}):\n#{lista}"
         send(pid_cliente, {:info, mensaje})
         bucle_servidor(clientes)
 
@@ -65,7 +64,7 @@ defmodule ChatServidor do
 
           nombre ->
             nuevos_clientes = Map.delete(clientes, pid_cliente)
-            mensaje_salida = "🔴 #{nombre} ha salido del chat"
+            mensaje_salida = " #{nombre} ha salido del chat"
             broadcast(nuevos_clientes, mensaje_salida, :sistema)
 
             log_servidor("#{nombre} desconectado (#{map_size(nuevos_clientes)} usuarios)")
@@ -80,7 +79,7 @@ defmodule ChatServidor do
 
           nombre ->
             nuevos_clientes = Map.delete(clientes, pid_cliente)
-            mensaje_salida = "🔴 #{nombre} se ha desconectado"
+            mensaje_salida = " #{nombre} se ha desconectado"
             broadcast(nuevos_clientes, mensaje_salida, :sistema)
 
             log_servidor("#{nombre} desconectado inesperadamente")
